@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Andhra Pradesh Cities Map</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <style>
+        /* New CSS to move map to the right */
+        #content {
+            display: flex;
+            position: relative; 
+        }
+        #left-content {
+            flex: 1; 
+            width: 45%;
+            padding-left: 15%;
+        }
+        #apMap {
+            height: 400px;
+            /* Adjust the width to fit your layout */
+            width: 45%;
+            margin-left: auto;
+            padding-right: 100px;
+            padding-left: 10px;
+            padding-bottom:50px;
+        }
+        /* Existing CSS */
+        #stateSelector, #citySelector { margin: 20px; }
+        .tableContainer {
+            display: none;
+            position: fixed;
+            top: 70%;
+            left: 70%;
+            transform: translate(-50%, -50%);
+            padding: 30px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+        }
+        .blink {
+            animation: blinker 1.5s linear infinite;
+            color: red;
+            font-family: sans-serif;
+        }
+        @keyframes blinker {
+            50% {
+                opacity: 0;
+            }
+        }
+        table {
+            width: 25%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 5px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .image {
+            display: flex;
+            justify-content: space-evenly;
+            justify-content: space-between;
+            padding-left: 50px;
+        }
+        .narl {
+            padding-left: 175px;
+        }
+        .a {
+            padding-left: 35px;
+        }
+        .b {
+            padding-left: 23px;
+        }
+        .selected-city-marker {
+            color: yellow;
+        } 
+        body {
+            background-image: url("https://media.istockphoto.com/id/500540815/photo/light-blue-sky.jpg?s=2048x2048&w=is&k=20&c=eAjhTjrc7Xozm9hHNCEpJojpw0fE4_3uPVhpYhuDosQ=");
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+        .end {
+            padding-left: 15%;
+        }
+    </style>
+</head>
+<body>
+<div class="image">
+    <img src="https://media.licdn.com/dms/image/C510BAQEkpuR-jeugQg/company-logo_200_200/0/1630614913323/national_atmospheric_research_laboratory_isro_logo?e=2147483647&v=beta&t=TFf-RMZMWVjQ0BgR9Y5G4CuXz9yyLbyKThNU0bLphz0" style="padding-top:25px;padding-left:50px;height:150px;width:150px;"  >
+    <div class="narl">
+        <pre><h1 style="padding-top:25px;padding-bottom:25px;padding-left:50px;font-size:30px">    NATIONAL ATMOSPHERIC RESEARCH LABORATORY (NARL)
+
+         WEATHER CLIMATIC RESEARCH GROUP(WCRG)</h1></pre>
+        <marquee  scrollamount="12" class="blink" width="100%"><pre><h1 style="color:DarkBlue;font-style:algerian;padding-bottom:10px;">WEATHER FORECASTING, NARL, GADANKI                      WEATHER FORECASTING, NARL, GADANKI                        WEATHER FORECASTING, NARL, GADANKI </h1></pre></marquee>
+    </div>
+</div>
+
+<div id="content">
+    <div id="left-content">
+        <h2>SELECT DATE</h2>
+        <div class="b">
+            <input type="date" id="Date"></div>
+        <h2>SELECT STATE</h2>
+        <select id="stateSelector" onchange="populateCities()">
+            <option value="">Select a state...</option>
+            <option value="Andhra Pradesh">Andhra Pradesh</option>
+            <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+            <option value="Assam">Assam</option>
+            <option value="Bihar">Bihar</option>
+            <option value="Chhattisgarh">Chhattisgarh</option>
+            <option value="Goa">Goa</option>
+            <option value="Gujarat">Gujarat</option>
+            <option value="Himachal Pradesh">Himachal Pradesh</option>
+            <option value="Haryana">Haryana</option>
+            <option value="Jharkhand">Jharkhand</option>
+            <option value="Karnataka">Karnataka</option>
+            <option value="Kerala">Kerala</option>
+            <option value="Maharashtra">Maharastra</option>
+            <option value="Madhya Pradesh">Madhya Pradesh</option>
+            <option value="Meghalaya">Meghalaya</option>
+            <option value="Mizoram">Mizoram</option>
+            <option value="Manipur">Manipur</option>
+            <option value="Nagaland">Nagaland</option>
+            <option value="Punjab">Punjab</option>
+            <option value="Rajasthan">Rajasthan</option>
+            <option value="Sikkim">Sikkim</option>
+            <option value="Tamil Nadu">Tamil Nadu</option>
+            <option value="Telangana">Telangana</option>
+            <option value="West Bengal">West Bengal</option>
+            <option value="Odisha">Odisha</option>
+            <option value="Tripura">Tripura</option>
+            <option value="Uttar Pradesh">Uttar Pradesh</option>
+            <option value="Uttarakhand">Uttarakhand</option>
+        </select>
+        <h2>SELECT CITY</h2>
+        <select id="citySelector" onchange="focusOnCity()">
+            <option value="">Select a city...</option>
+        </select>
+        <div class="a">
+            <button type="button" onclick="handleSubmit()" id="submitButton">Submit</button>
+        </div>
+    </div>
+
+    <!-- Table for displaying CSV data -->
+    <div class="tableContainer" id="tableContainer">
+        <button onclick="closeTable()">Close</button>
+        <table id="outputTable"></table>
+    </div>
+
+    <!-- Map on the right side -->
+    <div id="apMap"></div>
+</div>
+
+<script>
+var map = L.map('apMap').setView([16.00, 80.00], 7);
+var cityMarkers = []; // Array to keep track of city markers
+var selectedMarker = null; // Variable to keep track of the selected marker
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>',
+    maxZoom: 18,
+}).addTo(map);
+
+var cities = [
+    {name: "Tirupati", lat: 13.62, lon: 79.41, state: "Andhra Pradesh"},
+    {name: "Vijayawada", lat: 16.50, lon: 80.64, state: "Andhra Pradesh"},
+    {name: "Visakhapatnam", lat: 17.68, lon: 83.21, state: "Andhra Pradesh"},
+    {name: "Itanagar", lat: 27.08, lon: 93.60, state: "Arunachal Pradesh"},
+    {name: "Pasighat", lat: 28.06, lon: 95.32, state: "Arunachal Pradesh"},
+    {name: "Tawang", lat: 27.58, lon: 91.87, state: "Arunachal Pradesh"},
+    {name: "Assam", lat: 26.20, lon: 92.93, state: "Assam"},
+    {name: "Patna", lat: 25.59, lon: 85.13, state: "Bihar"},
+    {name: "Bilaspur", lat: 22.07, lon: 82.13, state: "Chhattisgarh"},
+    {name: "Raipur", lat: 21.25, lon: 81.62, state: "Chhattisgarh"},
+    {name: "Shimla", lat: 31.10, lon: 77.17, state: "Himachal Pradesh"},
+    {name: "Noida", lat: 28.53, lon: 77.39, state: "Uttar Pradesh"},
+    {name: "SHAR", lat: 13.72, lon: 80.22, state: "Andhra Pradesh"},
+    {name: "Arakonam", lat: 13.07, lon: 79.65, state: "Tamil Nadu"},
+    {name: "Bangalore", lat: 12.97, lon: 77.59, state: "Karnataka"},
+    {name: "Chennai", lat: 13.08, lon: 80.27, state: "Tamil Nadu"},
+    {name: "Gadanki", lat: 13.45, lon: 79.17, state: "Andhra Pradesh"},
+    {name: "Hyderabad", lat: 17.47, lon: 78.58, state: "Telangana"},
+    {name: "Panaji", lat: 15.49, lon: 73.82, state: "Goa"},
+    {name: "Puducherry", lat: 11.91, lon: 79.81, state: "Puducherry"},
+    {name: "Kolkata", lat: 22.57, lon: 88.36, state: "West Bengal"},
+    {name: "Shilong", lat: 25.57, lon: 91.89, state: "Meghalaya"},
+    {name: "Gandhinagar", lat: 23.21, lon: 72.63, state: "Gujarat"},
+    {name: "Mount Abu", lat: 24.59, lon: 72.71, state: "Rajasthan"},
+    {name: "Nainital", lat: 29.39, lon: 79.45, state: "Uttarakhand"},
+    {name: "Nagpur", lat: 21.14, lon: 79.08, state: "Maharashtra"},
+    {name: "Thiruvananthapuram", lat: 8.52, lon: 76.93, state: "Kerala"},
+    {name: "Kochi", lat: 9.93, lon: 76.26, state: "Kerala"},
+    {name: "Chandigarh", lat: 30.73, lon: 76.77, state: "Chandigarh"},
+    {name: "Bhopal", lat: 23.2667, lon: 77.6, state: "Madhya Pradesh"},
+    {name: "Indore", lat: 22.7333, lon: 75.8333, state: "Madhya Pradesh"},
+    {name: "Gangtok", lat: 27.33, lon: 88.61, state: "Sikkim"},
+    {name: "Ranchi", lat: 23.34, lon: 85.30, state: "Jharkhand"},
+    {name: "Bhubaneswar", lat: 20.29, lon: 85.82, state: "Odisha"},
+    {name: "Jaipur", lat: 26.91, lon: 75.78, state: "Rajasthan"},
+    {name: "Lucknow", lat: 26.84, lon: 80.94, state: "Uttar Pradesh"},
+    {name: "Mumbai", lat: 18.90, lon: 72.80, state: "Maharashtra"},
+    {name: "Pune", lat: 18.52, lon: 73.85, state: "Maharashtra"},
+    {name: "Imphal", lat: 24.81, lon: 93.93, state: "Manipur"},
+    {name: "Aizwal", lat: 23.72, lon: 92.71, state: "Mizoram"},
+    {name: "Kohima", lat: 25.67, lon: 94.10, state: "Nagaland"},
+    {name: "Agartala", lat: 23.83, lon: 91.28, state: "Tripura"},
+    {name: "Dehradun", lat: 30.31, lon: 78.03, state: "Uttarakhand"},
+    {name: "Delhi", lat: 28.70, lon: 77.10, state: "Delhi"},
+    {name: "Goa", lat: 15.29, lon: 74.12, state: "Goa"},
+    {name: "Ahmedabad", lat: 23.02, lon: 72.57, state: "Gujarat"},
+    // Rest of the cities...
+];
+
+function addCityMarkers(state) {
+    // Clear existing markers
+    cityMarkers.forEach(marker => map.removeLayer(marker));
+    cityMarkers = []; // Reset the array
+
+    // Filter cities by state and add new markers
+    cities.filter(city => city.state === state).forEach(city => {
+        var marker = L.marker([city.lat, city.lon]).addTo(map)
+            .bindPopup(city.name);
+        // Set default marker icon
+        marker.setIcon(L.icon({
+            iconUrl: 'https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-yellow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            tooltipAnchor: [16, -28],
+            shadowSize: [41, 41]
+        }));
+
+        cityMarkers.push(marker); // Keep track of the marker
+    });
+}
+// Define the folder path where CSV files are stored
+var folderPath = "data/";
+console.log("Date", date);
+console.log("City",city);
+// Function to fetch and display full data from the selected CSV file
+function displayFullData(date, city) {
+    var filePath = `/data/${date}/${city}`;
+    console.log("Fetching CSV file from:", filePath);
+
+    fetch(filePath)
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Failed to fetch CSV file');
+        }
+        return response.text();
+    })
+    .then(data => {
+        console.log("CSV file fetched successfully:", data);
+        var table = createTable(data);
+        tableContainer.style.display = "block"; // Show the table container
+        outputTable.innerHTML = ""; // Clear previous table content
+        outputTable.appendChild(table);
+    })
+    .catch(error => {
+        console.error('Error fetching CSV data:', error);
+        alert('Error fetching CSV data. Please check console for details.');
+    });
+}
+
+// Function to handle click event on the submit button
+function handleSubmit() {
+    var selectedDate = document.getElementById('Date').value;
+    var formattedDate = selectedDate.replaceAll('-', ''); // Remove hyphens from the selected date
+    var selectedCity = document.getElementById('citySelector').value;
+    if (formattedDate && selectedCity) {
+        displayFullData(formattedDate, selectedCity);
+    }
+}
+// Function to highlight the selected city on the map
+function highlightCityOnMap(cityName) {
+    var city = cities.find(city => city.name === cityName);
+    if (city) {
+        map.setView([city.lat, city.lon], 10); // Zoom into the city
+
+        // Highlight the selected city marker
+        if (selectedCityMarker) {
+            map.removeLayer(selectedCityMarker);
+        }
+
+        // Add new marker for the selected city
+        selectedCityMarker = L.marker([city.lat, city.lon], { icon: selectedCityIcon }).addTo(map)
+            .bindPopup(city.name);
+
+        // Open popup for the selected city
+        selectedCityMarker.openPopup();
+    }
+}
+
+// Attach event listener to the submit button
+document.getElementById('submitButton').addEventListener('click', handleSubmit);
+document.getElementById("submitButton").style.display="block";
+// Function to populate cities based on the selected state
+function populateCities() {
+    var state = document.getElementById('stateSelector').value;
+    var citySelector = document.getElementById('citySelector');
+    citySelector.innerHTML = "<option value=''>Select a city...</option>";
+
+    cities.forEach(function(city) {
+        if (city.state === state) {
+            citySelector.innerHTML += `<option value="${city.name}">${city.name}</option>`;
+        }
+    });
+
+    // Add markers for the newly selected state
+    addCityMarkers(state);
+}
+// Function to focus on the selected city
+// Function to focus on the selected city
+function focusOnCity() {
+    var cityName = document.getElementById('citySelector').value;
+    if (cityName) {
+        var city = cities.find(city => city.name === cityName);
+        if (city) {
+            map.setView([city.lat, city.lon], 10); // Zoom into the city
+            
+            // Reset marker icon for previously selected marker
+            if (selectedMarker) {
+                selectedMarker.setIcon(L.icon({
+                    iconUrl: 'https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-yellow.png',
+                    iconSize: [25, 41],
+                    iconAnchor: [12, 41],
+                    popupAnchor: [1, -34],
+                    tooltipAnchor: [16, -28],
+                    shadowSize: [41, 41]
+                }));
+            }
+            cityMarkers.forEach(marker => {
+                if (marker.getPopup().getContent() === cityName) {
+                    marker.openPopup();
+                    selectedMarker = marker; // Update selected marker
+                    // Change marker icon for selected marker
+                    marker.setIcon(L.icon({
+                        iconUrl: 'https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+                        iconSize: [25, 41],
+                        iconAnchor: [12, 41],
+                        popupAnchor: [1, -34],
+                        tooltipAnchor: [16, -28],
+                        shadowSize: [41, 41]
+                    }));
+                }
+            });
+        }
+    }
+}
+
+
+// Function to create table from CSV data
+function createTable(data) {
+    const rows = data.split(/\r?\n/); // Split by newline characters
+    const table = document.createElement('table');
+
+    // Create table header row
+    const headerRow = document.createElement('tr');
+    rows[0].split(',').forEach(header => {
+        const headerCell = document.createElement('th');
+        headerCell.textContent = header;
+        headerRow.appendChild(headerCell);
+    });
+    table.appendChild(headerRow);
+
+    // Create data rows
+    for (let i = 1; i < rows.length; i++) {
+        const cells = rows[i].split(',');
+        const dataRow = document.createElement('tr');
+        cells.forEach(cell => {
+            const dataCell = document.createElement('td');
+            dataCell.textContent = cell;
+            dataRow.appendChild(dataCell);
+        });
+        table.appendChild(dataRow);
+    }
+
+    return table;
+}
+
+// Function to close the table container
+function closeTable() {
+    tableContainer.style.display = "none"; // Hide the table container
+}
+</script>
+</body>
+</html>
